@@ -7,7 +7,6 @@ from telethon import TelegramClient
 
 
 SESSION_DIR = Path(__file__).parent / "sessions"
-DEFAULT_SESSION_NAME = "anon"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -30,11 +29,8 @@ async def main():
 
     telegram_app_id = int(telegram_app_id)
 
-    session_name = (
-        input(f"Enter session name (defaults to {DEFAULT_SESSION_NAME!r}): ").strip()
-        or DEFAULT_SESSION_NAME
-    )
-    session_filename = f"{session_name}.session"
+    phone_number = input("Enter phone number: ").strip()
+    session_filename = f"{phone_number.lstrip('+')}.session"
     full_session_path = SESSION_DIR / session_filename
     logger.info(
         f"Session will be created under the following path: {full_session_path}"
@@ -42,12 +38,12 @@ async def main():
     # Remove session if already exists
     full_session_path.unlink(missing_ok=True)
     # Generate a new session
-    async with TelegramClient(
-        str(full_session_path), telegram_app_id, telegram_app_hash
-    ) as client:
-        await client.start()
+    client = TelegramClient(str(full_session_path), telegram_app_id, telegram_app_hash)
+    logger.info(f"Authenticating with phone number: {phone_number}")
+    await client.start(phone=phone_number)
 
     logger.info(f"Session created successfully: {full_session_path!r}")
+    await client.disconnect()
 
 
 if __name__ == "__main__":
